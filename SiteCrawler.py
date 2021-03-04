@@ -41,6 +41,9 @@ class SiteCrawler(scrapy.Spider):
     urls = []
 
     excluded_extensions = [
+        'js',
+        'css'
+        'swf',
         'zip',
         'rar',
         'png',
@@ -48,7 +51,8 @@ class SiteCrawler(scrapy.Spider):
         'jpeg'
         'doc',
         'docx',
-        'pdf'
+        'pdf',
+        'exe'
     ]
 
     def __init__(self, **kwargs):
