@@ -45,6 +45,7 @@ class SiteCrawler(scrapy.Spider):
 
     starting_url = None
     target = None
+    unique_params = False
 
     urls = []
 
@@ -63,6 +64,11 @@ class SiteCrawler(scrapy.Spider):
         'exe'
     ]
 
+    excluded_scheme = [
+        'javascript',
+        'tel'
+    ]
+
     def __init__(self, **kwargs):
         super().__init__(self.name, **kwargs)
 
@@ -72,6 +78,9 @@ class SiteCrawler(scrapy.Spider):
             exit(1)
 
         self.starting_url = self.url
+
+        if hasattr(self, 'unique-params'):
+            self.unique_params = True
 
         self.target = urlparse(self.starting_url)
 
@@ -119,7 +128,13 @@ class SiteCrawler(scrapy.Spider):
     def is_valid_url(self, url):
         parsed_url = urlparse(url)
 
+        if self.target.scheme != parsed_url.scheme:
+            return False
+
         if self.target.netloc != parsed_url.netloc:
+            return False
+
+        if parsed_url.scheme in self.excluded_scheme:
             return False
 
         extension = get_extension(url)
@@ -127,4 +142,44 @@ class SiteCrawler(scrapy.Spider):
         if extension is not None and extension in self.excluded_extensions:
             return False
 
+        if len(parsed_url.query) > 0 and self.unique_params and not self.is_unique_url_with_params(url):
+            return False
+
         return True
+
+    def is_unique_url_with_params(self, url):
+        parsed_url = urlparse(url)
+        params = self.get_query_keys(url)
+
+        for added_url in self.urls:
+            added_parsed_url = urlparse(added_url)
+
+            if added_parsed_url.path != parsed_url.path:
+                continue
+
+            added_url_params = self.get_query_keys(url)
+
+            n = 0
+
+            for param in params:
+                if param in added_url_params:
+                    n = n + 1
+
+            if n == len(params):
+                return False
+
+        return True
+
+    def get_query_keys(self, url):
+        parsed_url = urlparse(url)
+
+        parts = parsed_url.query.split('&')
+
+        params = []
+
+        for part in parts:
+            split = part.split('=')
+
+            params.append(split[0])
+
+        return params
