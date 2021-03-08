@@ -9,11 +9,19 @@ def get_url(parent_url, url):
     parsed_url = urlparse(url)
 
     scheme = parsed_url.scheme
+    netloc = parsed_url.netloc
+    path = parsed_url.path
 
     if len(scheme) == 0:
         scheme = parsed_parent_url.scheme
 
-    parsed_url = ParseResult(scheme=scheme, netloc=parsed_url.netloc, path=parsed_url.path, params=parsed_url.params,
+    if len(netloc) == 0:
+        netloc = parsed_parent_url.netloc
+
+    if path == '/':
+        path = ''
+
+    parsed_url = ParseResult(scheme=scheme, netloc=netloc, path=path, params=parsed_url.params,
                              query=parsed_url.query, fragment='')
 
     return parsed_url.geturl()
