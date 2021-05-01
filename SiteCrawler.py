@@ -46,6 +46,7 @@ class SiteCrawler(scrapy.Spider):
     starting_url = None
     target = None
     unique_params = False
+    json_output = False
 
     urls = []
 
@@ -82,6 +83,9 @@ class SiteCrawler(scrapy.Spider):
         if hasattr(self, 'unique-params'):
             self.unique_params = True
 
+        if hasattr(self, 'json-output'):
+            self.json_output = True
+
         self.target = urlparse(self.starting_url)
 
         # print('Starting url: %s' % self.starting_url)
@@ -115,11 +119,15 @@ class SiteCrawler(scrapy.Spider):
             'urls': self.urls
         }
 
-        print(json.dumps(data))
+        if self.json_output:
+            print(json.dumps(data))
 
     def add_url(self, url):
         if url not in self.urls:
             self.urls.append(url)
+
+            if not self.json_output:
+                print(url)
 
             return True
 
